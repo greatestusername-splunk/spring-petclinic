@@ -1,0 +1,28 @@
+package org.springframework.samples.petclinic.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class ExternalAPI {
+
+	private final RestTemplate restTemplate;
+
+	@Autowired
+	public ExternalAPI(RestTemplate restTemplate) {
+		this.restTemplate = restTemplate;
+	}
+
+	public String fetchExternalAPI() {
+		try {
+			String url = "http://10.43.98.254:8888/check?customernum=1";
+			// String url = "https://www.google.com";
+			return restTemplate.getForObject(url, String.class);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Failed to fetch External API", e);
+		}
+	}
+
+}

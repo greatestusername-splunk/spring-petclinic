@@ -18,6 +18,8 @@ package org.springframework.samples.petclinic.owner;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.samples.petclinic.service.ExternalAPI;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,8 +51,12 @@ class OwnerController {
 
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository clinicService) {
+	private final ExternalAPI externalAPI; // Add ExternalAPI dependency
+
+	@Autowired
+	public OwnerController(OwnerRepository clinicService, ExternalAPI externalAPI) {
 		this.owners = clinicService;
+		this.externalAPI = externalAPI;
 	}
 
 	@InitBinder
@@ -90,6 +96,20 @@ class OwnerController {
 	@GetMapping("/owners")
 	public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner owner, BindingResult result,
 			Model model) {
+		// Fetch data from external API
+		String externalData;
+		try {
+			externalData = externalAPI.fetchExternalAPI();
+		}
+		catch (RuntimeException e) {
+			// Log the error or handle it
+			model.addAttribute("apiError", "Failed to fetch data from external API.");
+			externalData = "Unavailable";
+		}
+		System.out.println("**************************************************");
+		System.out.println(externalData);
+		model.addAttribute("externalData", externalData);
+
 		// allow parameterless GET request for /owners to return all records
 		if (owner.getLastName() == null) {
 			owner.setLastName(""); // empty string signifies broadest possible search
