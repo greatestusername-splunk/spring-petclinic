@@ -16,7 +16,7 @@ public class ExternalAPI {
 
 	public String fetchExternalAPI() {
 		try {
-			String url = "http://10.43.98.254:8888/check?customernum=123456789000";
+			String url = "http://0.0.0.0:8888/check?customernum=123456789000";
 			// String url = "https://www.google.com";
 			return restTemplate.getForObject(url, String.class);
 		}
