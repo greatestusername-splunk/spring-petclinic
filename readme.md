@@ -10,13 +10,19 @@
 
 Spring Petclinic is a [Spring Boot](https://spring.io/guides/gs/spring-boot) application built using [Maven](https://spring.io/guides/gs/maven/) or [Gradle](https://spring.io/guides/gs/gradle/). You can build a jar file and run it from the command line (it should work just as well with Java 17 or newer):
 
+### Run with Splunk OpenTelemetry instrumentation
 ```bash
 git clone https://github.com/spring-projects/spring-petclinic.git
 cd spring-petclinic
-./mvnw package
-java -jar target/*.jar
+curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar \
+-o splunk-otel-javaagent.jar
+apt install -y openjdk-17-jdk openjdk-17-jre
+./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true
+java -javaagent:./splunk-otel-javaagent.jar \
+-Dotel.service.name=spring-petclinic \
+-jar target/*.jar
 ```
-
+./mvnw spring-javaformat:apply; ./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true; ./start-app-ubuntu.sh
 You can then access the Petclinic at <http://localhost:8080/>.
 
 <img width="1042" alt="petclinic-screenshot" src="https://cloud.githubusercontent.com/assets/838318/19727082/2aee6d6c-9b8e-11e6-81fe-e889a5ddfded.png">
