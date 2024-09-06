@@ -1,28 +1,21 @@
-# Spring PetClinic Sample Application [![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml)
+# Spring PetClinic Sample Application  
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/spring-projects/spring-petclinic) [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=7517918)
+0. Have the cluster with all your otel and services running
+1. Edit your `start-app.sh` file to include the correct environment names you would like your telemetry to include to both destinations.
+2. Add appropriate token for AppD
 
-## Understanding the Spring Petclinic application with a few diagrams
+## Run with AppD OpenTelemetry export
 
-[See the presentation here](https://speakerdeck.com/michaelisvy/spring-petclinic-sample-application)
-
-## Run Petclinic locally
-
-Spring Petclinic is a [Spring Boot](https://spring.io/guides/gs/spring-boot) application built using [Maven](https://spring.io/guides/gs/maven/) or [Gradle](https://spring.io/guides/gs/gradle/). You can build a jar file and run it from the command line (it should work just as well with Java 17 or newer):
-
-### Run with Splunk OpenTelemetry instrumentation
 ```bash
 git clone https://github.com/spring-projects/spring-petclinic.git
 cd spring-petclinic
-curl -L https://github.com/signalfx/splunk-otel-java/releases/latest/download/splunk-otel-javaagent.jar \
--o splunk-otel-javaagent.jar
 apt install -y openjdk-17-jdk openjdk-17-jre
+./downloadAppDJavaAgentLatest-ubuntu
 ./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true
-java -javaagent:./splunk-otel-javaagent.jar \
--Dotel.service.name=spring-petclinic \
--jar target/*.jar
+./start-app-ubuntu.sh
 ```
-./mvnw spring-javaformat:apply; ./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true; ./start-app-ubuntu.sh
+
+**NOTE:** If you have made any changes to the pet clinic code you will need to use `./mvnw spring-javaformat:apply; ./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true` to lint and build before running with `./start-app-ubuntu`
 You can then access the Petclinic at <http://localhost:8080/>.
 
 <img width="1042" alt="petclinic-screenshot" src="https://cloud.githubusercontent.com/assets/838318/19727082/2aee6d6c-9b8e-11e6-81fe-e889a5ddfded.png">
