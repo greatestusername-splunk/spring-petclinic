@@ -1,15 +1,18 @@
 # Spring PetClinic Sample Application  
 
-0. Have the cluster with all your otel and services running
-1. Edit your `start-app.sh` file to include the correct environment names you would like your telemetry to include to both destinations.
-2. Add appropriate token for AppD
+1. Have the cluster with all your [otel and services running (QEP branch)](https://github.com/greatestusername-splunk/qep/tree/geeesex-proj)
+   1. Pet Clinic will attempt to connect to Credit Check service in your cluster at `0.0.0.0:30727` which should be setup with the QEP project and branch linked above
+2. Edit your `start-app.sh` file to include the correct environment names you would like your telemetry to include to both destinations.
+3. Add AppD token to `start-app.sh`
 
-## Run with AppD OpenTelemetry export
+## Run with AppD Hybrid Agent OpenTelemetry export
 
 ```bash
 git clone https://github.com/spring-projects/spring-petclinic.git
 cd spring-petclinic
+## Make sure you have java 17 installed
 apt install -y openjdk-17-jdk openjdk-17-jre
+## Download dependencies, build package, start app
 ./downloadAppDJavaAgentLatest-ubuntu
 ./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true
 ./start-app-ubuntu.sh
@@ -18,15 +21,10 @@ apt install -y openjdk-17-jdk openjdk-17-jre
 **NOTE:** If you have made any changes to the pet clinic code you will need to use `./mvnw spring-javaformat:apply; ./mvnw package -Dcheckstyle.skip -Dmaven.test.skip=true` to lint and build before running with `./start-app-ubuntu`
 You can then access the Petclinic at <http://localhost:8080/>.
 
-<img width="1042" alt="petclinic-screenshot" src="https://cloud.githubusercontent.com/assets/838318/19727082/2aee6d6c-9b8e-11e6-81fe-e889a5ddfded.png">
+To generate load a simple one liner can be used (E.G. 40 parallel connections every 5 seconds):
+`watch -n 5 "seq 40 | xargs -P 40 -I {} curl -s 0.0.0.0:8080/owners"`
 
-Or you can run it from Maven directly using the Spring Boot Maven plugin. If you do this, it will pick up changes that you make in the project immediately (changes to Java source files require a compile as well - most people use an IDE for this):
-
-```bash
-./mvnw spring-boot:run
-```
-
-> NOTE: If you prefer to use Gradle, you can build the app using `./gradlew build` and look for the jar file in `build/libs`.
+# Unrelated to this demo
 
 ## Building a Container
 
