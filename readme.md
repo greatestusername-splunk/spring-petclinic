@@ -3,7 +3,7 @@
 1. Have the cluster with all your [otel and services running (QEP branch)](https://github.com/greatestusername-splunk/qep/tree/geeesex-proj)
    1. Pet Clinic will attempt to connect to Credit Check service in your cluster at `0.0.0.0:30727` which should be setup with the QEP project and branch linked above
 2. Edit your `start-app.sh` file to include the correct environment names you would like your telemetry to include to both destinations.
-3. Add AppD token to `start-app.sh`
+3. Add AppD token and other env vars to `start-app.sh`
 
 ## Run with AppD Hybrid Agent OpenTelemetry export
 
