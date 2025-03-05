@@ -11,4 +11,4 @@ export APPDYNAMICS_CONTROLLER_SSL_ENABLED=true
 export APPDYNAMICS_AGENT_NODE_NAME="reuse"
 export APPDYNAMICS_JAVA_AGENT_REUSE_NODE_NAME="true"
 
-java -javaagent:appdynamics/javaagent.jar -Dappdynamics.opentelemetry.enabled=true -Dotel.traces.exporter=otlp -Dotel.exporter.otlp.traces.endpoint=http://0.0.0.0:4317 -Dotel.resource.attributes="service.name=$APPDYNAMICS_AGENT_APPLICATION_NAME,service.namespace=petclinic,deployment.environment=$APPDYNAMICS_AGENT_TIER_NAME" -jar target/*.jar
+java -javaagent:appdynamics/javaagent.jar -jar target/*.jar
