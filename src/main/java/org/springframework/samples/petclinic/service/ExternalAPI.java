@@ -1,16 +1,14 @@
 package org.springframework.samples.petclinic.service;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class ExternalAPI {
@@ -38,19 +36,21 @@ public class ExternalAPI {
 		if (sleepDuration > 500) {
 			url = "http://0.0.0.0:30727/check?customernum=123456789000";
 			System.out.println("Sleep for " + sleepDuration + " milliseconds");
+			vettingProcess(sleepDuration);
+			return createErrorResponse("Operation failed due to long processing time.");
 		}
 		else if (sleepDuration <= 25) {
 			url = "http://0.0.0.0:30727/check?customernum=jrhicks";
 			System.out.println("Expecting 500");
 			sleepDuration /= 4;
+			vettingProcess(sleepDuration);
 		}
 		else {
 			url = "http://0.0.0.0:30727/check?customernum=7064897";
 			System.out.println("Fast sleep for " + sleepDuration / 4 + " milliseconds");
 			sleepDuration /= 4;
+			vettingProcess(sleepDuration);
 		}
-
-		vettingProcess(sleepDuration);
 
 		CompletableFuture.supplyAsync(() -> {
 			try {
@@ -58,7 +58,7 @@ public class ExternalAPI {
 			}
 			catch (RestClientException e) {
 				System.err.println("Error fetching External API: " + e.getMessage());
-				return "Error: Unable to fetch external API data.";
+				return createErrorResponse("Error: Unable to fetch external API data.");
 			}
 		}, scheduler).thenAccept(result -> {
 			System.out.println("Result received: " + result);
@@ -77,6 +77,12 @@ public class ExternalAPI {
 		catch (InterruptedException e) {
 			System.err.println("Sleep interrupted: " + e.getMessage());
 		}
+	}
+
+	private String createErrorResponse(String message) {
+		// You can format this as JSON or a specific string format that the caller can
+		// interpret
+		return "{\"status\":\"error\", \"message\":\"" + message + "\"}";
 	}
 
 }
