@@ -16,14 +16,15 @@ public class ExternalAPI {
 
 	private final RestTemplate restTemplate;
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	// Increase the thread pool size to handle more concurrent tasks
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
 	@Autowired
 	public ExternalAPI(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
 	}
 
-	public String fetchExternalAPI() {
+	public CompletableFuture<String> fetchExternalAPI() {
 		Random random = new Random();
 		int minSleep = 1;
 		int maxSleep = 4000;
@@ -35,24 +36,24 @@ public class ExternalAPI {
 		int sleepDuration = (int) (minSleep + (maxSleep - minSleep) * skewedValue);
 
 		String url;
-		if (sleepDuration > 500) {
+		if (sleepDuration > 1500) {
 			url = "http://local-local:30727/check?customernum=123456789000";
-			System.out.println("Sleep for " + sleepDuration + " milliseconds");
-			return queryCreditCheck(() -> restTemplate.getForObject(url, String.class), sleepDuration);
+			System.out.println("Delaying request for " + sleepDuration + " milliseconds");
+			return delayBeforeRequest(() -> restTemplate.getForObject(url, String.class), sleepDuration);
 		}
 		else if (sleepDuration <= 25) {
 			url = "http://0.0.0.0:30727/check?customernum=jrhicks";
-			System.out.println("expecting 500");
+			System.out.println("Expecting 500");
 			return queryCreditCheck(() -> restTemplate.getForObject(url, String.class), sleepDuration / 4);
 		}
 		else {
 			url = "http://0.0.0.0:30727/check?customernum=7064897";
-			System.out.println("Fast sleep for " + sleepDuration / 4 + " milliseconds");
-			return queryCreditCheck(() -> restTemplate.getForObject(url, String.class), sleepDuration / 4);
+			System.out.println("Fast sleep for " + sleepDuration + " milliseconds");
+			return queryCreditCheck(() -> restTemplate.getForObject(url, String.class), sleepDuration);
 		}
 	}
 
-	private <T> T queryCreditCheck(Supplier<T> supplier, int delay) {
+	private <T> CompletableFuture<T> delayBeforeRequest(Supplier<T> supplier, int delay) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		scheduler.schedule(() -> {
 			try {
@@ -64,12 +65,34 @@ public class ExternalAPI {
 			}
 		}, delay, TimeUnit.MILLISECONDS);
 
-		try {
-			return future.get(); // Blocks until the future is completed
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Failed to fetch External API", e);
-		}
+		return future;
+	}
+
+	private <T> CompletableFuture<T> queryCreditCheck(Supplier<T> supplier, int delay) {
+		CompletableFuture<T> future = new CompletableFuture<>();
+		scheduler.schedule(() -> {
+			try {
+				T result = supplier.get();
+				future.complete(result);
+			}
+			catch (Exception e) {
+				future.completeExceptionally(e);
+			}
+		}, delay, TimeUnit.MILLISECONDS);
+
+		return future;
+	}
+
+	// Example usage of fetchExternalAPI
+	public void fetchAndProcess() {
+		fetchExternalAPI().thenAccept(response -> {
+			// Process the response
+			System.out.println("Response received: " + response);
+		}).exceptionally(ex -> {
+			// Handle exceptions
+			System.err.println("Error fetching API: " + ex.getMessage());
+			return null;
+		});
 	}
 
 }
