@@ -34,8 +34,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -105,10 +103,8 @@ class OwnerController {
 		}
 		catch (RuntimeException e) {
 			// Log the error or handle it
-			System.err.println("Failed to fetch data from external API: " + e.getMessage());
-			// Throw a ResponseStatusException to send a 500 status code
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-					"Failed to fetch data from external API.", e);
+			model.addAttribute("apiError", "Failed to fetch data from external API.");
+			externalData = "Unavailable";
 		}
 		System.out.println("**************************************************");
 		System.out.println(externalData);
