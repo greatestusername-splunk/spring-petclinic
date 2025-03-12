@@ -20,9 +20,7 @@ public class ExternalAPI {
 
 	private final RestTemplate restTemplate;
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4); // Increased
-																							// pool
-																							// size
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(6);
 
 	@Autowired
 	public ExternalAPI(RestTemplate restTemplate) {
@@ -40,7 +38,7 @@ public class ExternalAPI {
 		int sleepDuration = (int) (minSleep + (maxSleep - minSleep) * skewedValue);
 
 		String url;
-		if (sleepDuration > 2500) {
+		if (sleepDuration > 3500) {
 			url = "http://local-local:30727/check?customernum=123456789000";
 			System.out.println("Delaying request for " + sleepDuration + " milliseconds");
 			return delayBeforeRequest(() -> {
@@ -52,7 +50,7 @@ public class ExternalAPI {
 				}
 			}, sleepDuration);
 		}
-		else if (sleepDuration <= 350) {
+		else if (sleepDuration <= 650) {
 			url = "http://0.0.0.0:30727/test";
 			System.out.println("Request to /test");
 			return queryCreditCheck(() -> {
@@ -80,8 +78,8 @@ public class ExternalAPI {
 
 	private String makeHttpRequest(String urlString) throws Exception {
 		HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
-		connection.setConnectTimeout(3000); // 3 second connect timeout
-		connection.setReadTimeout(3000); // 3 second read timeout
+		connection.setConnectTimeout(3000);
+		connection.setReadTimeout(3000);
 		connection.setRequestMethod("GET");
 
 		int responseCode = connection.getResponseCode();
