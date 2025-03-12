@@ -136,22 +136,25 @@ class OwnerController {
 	}
 
 	@PostMapping("/owners/{ownerId}/edit")
-        public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId,
-                        RedirectAttributes redirectAttributes) {
-                if (result.hasErrors()) {
-                        redirectAttributes.addFlashAttribute("error", "There was an error in updating the owner.");
-                        return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
-                }
+	public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId,
+			RedirectAttributes redirectAttributes) {
+		if (result.hasErrors()) {
+			redirectAttributes.addFlashAttribute("error", "There was an error in updating the owner.");
+			return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
+		}
 
-                owner.setId(ownerId);
-                this.owners.save(owner);
-                redirectAttributes.addFlashAttribute("message", "Owner Values Updated");
-                return "redirect:/owners/{ownerId}";
-        }
+		owner.setId(ownerId);
+		this.owners.save(owner);
+		redirectAttributes.addFlashAttribute("message", "Owner Values Updated");
+		return "redirect:/owners/{ownerId}";
+	}
 
-@GetMapping("/owners/{ownerId}")
-        public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
-                ModelAndView mav = new ModelAndView("owners/ownerDetails");
-                Owner owner = this.owners.findById(ownerId);
-                mav.addObject(owner);
-                return mav;
+	@GetMapping("/owners/{ownerId}")
+	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+		ModelAndView mav = new ModelAndView("owners/ownerDetails");
+		Owner owner = this.owners.findById(ownerId);
+		mav.addObject(owner);
+		return mav;
+	}
+
+}
