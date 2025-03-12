@@ -3,12 +3,16 @@ package org.springframework.samples.petclinic.owner;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.samples.petclinic.service.ExternalAPI;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,6 +35,8 @@ class OwnerController {
 	private final OwnerRepository owners;
 
 	private final ExternalAPI externalAPI;
+
+	private final ExecutorService executorService = Executors.newCachedThreadPool();
 
 	@Autowired
 	public OwnerController(OwnerRepository clinicService, ExternalAPI externalAPI) {
@@ -73,44 +79,38 @@ class OwnerController {
 	}
 
 	@GetMapping("/owners")
-	public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner owner, BindingResult result,
-			Model model) {
-		CompletableFuture<String> futureExternalData = externalAPI.fetchExternalAPI();
-
-		// Make a copy of the variables that will be used inside the lambda
-		final Owner searchOwner = owner;
-		final BindingResult bindingResult = result;
-		final Model searchModel = model;
-
-		futureExternalData.thenAccept(externalData -> {
-			System.out.println("**************************************************");
-			System.out.println(externalData);
-			searchModel.addAttribute("externalData", externalData);
-
-			if (searchOwner.getLastName() == null) {
-				searchOwner.setLastName(""); // empty string signifies broadest possible
-												// search
-			}
-
-			Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, searchOwner.getLastName());
-			if (ownersResults.isEmpty()) {
-				bindingResult.rejectValue("lastName", "notFound", "not found");
-			}
-			else if (ownersResults.getTotalElements() == 1) {
-				Owner singleOwner = ownersResults.iterator().next();
-				searchModel.addAttribute("redirectUrl", "/owners/" + singleOwner.getId());
-			}
-			else {
-				addPaginationModel(page, searchModel, ownersResults);
-			}
-		}).exceptionally(ex -> {
+	public CompletableFuture<ResponseEntity<String>> processFindForm(@RequestParam(defaultValue = "1") int page,
+			Owner owner, BindingResult result, Model model) {
+		return externalAPI.fetchExternalAPI().thenApplyAsync(externalData -> {
+			processOwners(page, owner, result, model, externalData);
+			return ResponseEntity.ok("owners/ownersList");
+		}, executorService).exceptionally(ex -> {
 			System.err.println("Error fetching API: " + ex.getMessage());
-			searchModel.addAttribute("apiError", "Failed to fetch data from external API.");
-			searchModel.addAttribute("externalData", "Unavailable");
-			return null;
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body("Failed to fetch data from external API.");
 		});
+	}
 
-		return "owners/ownersList";
+	private void processOwners(int page, Owner owner, BindingResult result, Model model, String externalData) {
+		System.out.println("**************************************************");
+		System.out.println(externalData);
+		model.addAttribute("externalData", externalData);
+
+		if (owner.getLastName() == null) {
+			owner.setLastName(""); // empty string signifies broadest possible search
+		}
+
+		Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, owner.getLastName());
+		if (ownersResults.isEmpty()) {
+			result.rejectValue("lastName", "notFound", "not found");
+		}
+		else if (ownersResults.getTotalElements() == 1) {
+			Owner singleOwner = ownersResults.iterator().next();
+			model.addAttribute("redirectUrl", "/owners/" + singleOwner.getId());
+		}
+		else {
+			addPaginationModel(page, model, ownersResults);
+		}
 	}
 
 	private String addPaginationModel(int page, Model model, Page<Owner> paginated) {
@@ -136,25 +136,22 @@ class OwnerController {
 	}
 
 	@PostMapping("/owners/{ownerId}/edit")
-	public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId,
-			RedirectAttributes redirectAttributes) {
-		if (result.hasErrors()) {
-			redirectAttributes.addFlashAttribute("error", "There was an error in updating the owner.");
-			return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
-		}
+        public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId,
+                        RedirectAttributes redirectAttributes) {
+                if (result.hasErrors()) {
+                        redirectAttributes.addFlashAttribute("error", "There was an error in updating the owner.");
+                        return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
+                }
 
-		owner.setId(ownerId);
-		this.owners.save(owner);
-		redirectAttributes.addFlashAttribute("message", "Owner Values Updated");
-		return "redirect:/owners/{ownerId}";
-	}
+                owner.setId(ownerId);
+                this.owners.save(owner);
+                redirectAttributes.addFlashAttribute("message", "Owner Values Updated");
+                return "redirect:/owners/{ownerId}";
+        }
 
-	@GetMapping("/owners/{ownerId}")
-	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
-		ModelAndView mav = new ModelAndView("owners/ownerDetails");
-		Owner owner = this.owners.findById(ownerId);
-		mav.addObject(owner);
-		return mav;
-	}
-
-}
+@GetMapping("/owners/{ownerId}")
+        public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+                ModelAndView mav = new ModelAndView("owners/ownerDetails");
+                Owner owner = this.owners.findById(ownerId);
+                mav.addObject(owner);
+                return mav;

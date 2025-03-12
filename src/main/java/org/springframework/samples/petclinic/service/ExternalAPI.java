@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -16,8 +20,9 @@ public class ExternalAPI {
 
 	private final RestTemplate restTemplate;
 
-	// Increase the thread pool size to handle more concurrent tasks
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4); // Increased
+																							// pool
+																							// size
 
 	@Autowired
 	public ExternalAPI(RestTemplate restTemplate) {
@@ -30,27 +35,68 @@ public class ExternalAPI {
 		int maxSleep = 4000;
 		double skewFactor = 1.7; // Greater than 1 to create a skewed distribution
 
-		// Apply the skew function to create a biased distribution
 		double randomValue = random.nextDouble();
 		double skewedValue = Math.pow(randomValue, skewFactor);
 		int sleepDuration = (int) (minSleep + (maxSleep - minSleep) * skewedValue);
 
 		String url;
-		if (sleepDuration > 1500) {
+		if (sleepDuration > 2500) {
 			url = "http://local-local:30727/check?customernum=123456789000";
 			System.out.println("Delaying request for " + sleepDuration + " milliseconds");
-			return delayBeforeRequest(() -> restTemplate.getForObject(url, String.class), sleepDuration);
+			return delayBeforeRequest(() -> {
+				try {
+					return makeHttpRequest(url);
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Request failed local", e);
+				}
+			}, sleepDuration);
 		}
-		else if (sleepDuration <= 25) {
-			url = "http://0.0.0.0:30727/check?customernum=jrhicks";
-			System.out.println("Expecting 500");
-			return queryCreditCheck(() -> restTemplate.getForObject(url, String.class), sleepDuration / 4);
+		else if (sleepDuration <= 350) {
+			url = "http://0.0.0.0:30727/test";
+			System.out.println("Request to /test");
+			return queryCreditCheck(() -> {
+				try {
+					return makeHttpRequest(url);
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Request failed test", e);
+				}
+			}, 2);
 		}
 		else {
 			url = "http://0.0.0.0:30727/check?customernum=7064897";
 			System.out.println("Fast sleep for " + sleepDuration + " milliseconds");
-			return queryCreditCheck(() -> restTemplate.getForObject(url, String.class), sleepDuration);
+			return queryCreditCheck(() -> {
+				try {
+					return makeHttpRequest(url);
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Request failed check", e);
+				}
+			}, sleepDuration / 4);
 		}
+	}
+
+	private String makeHttpRequest(String urlString) throws Exception {
+		HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
+		connection.setConnectTimeout(3000); // 3 second connect timeout
+		connection.setReadTimeout(3000); // 3 second read timeout
+		connection.setRequestMethod("GET");
+
+		int responseCode = connection.getResponseCode();
+		if (responseCode != 200) {
+			throw new RuntimeException("Failed with HTTP error code : " + responseCode);
+		}
+
+		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		StringBuilder response = new StringBuilder();
+		String inputLine;
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+		return response.toString();
 	}
 
 	private <T> CompletableFuture<T> delayBeforeRequest(Supplier<T> supplier, int delay) {
@@ -64,7 +110,6 @@ public class ExternalAPI {
 				future.completeExceptionally(e);
 			}
 		}, delay, TimeUnit.MILLISECONDS);
-
 		return future;
 	}
 
@@ -79,17 +124,14 @@ public class ExternalAPI {
 				future.completeExceptionally(e);
 			}
 		}, delay, TimeUnit.MILLISECONDS);
-
 		return future;
 	}
 
 	// Example usage of fetchExternalAPI
 	public void fetchAndProcess() {
 		fetchExternalAPI().thenAccept(response -> {
-			// Process the response
 			System.out.println("Response received: " + response);
 		}).exceptionally(ex -> {
-			// Handle exceptions
 			System.err.println("Error fetching API: " + ex.getMessage());
 			return null;
 		});
