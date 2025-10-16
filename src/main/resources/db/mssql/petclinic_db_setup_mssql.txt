@@ -1,0 +1,237 @@
+# Microsoft SQL Server Setup for Spring PetClinic
+
+## 🚀 AUTOMATED DEPLOYMENT OPTIONS
+
+### Option 1: Fully Automated with Docker (Recommended for Development)
+```bash
+# One command deployment - creates everything automatically
+DEPLOYMENT_MODE=docker ./deploy-mssql.sh
+
+# Or manually with docker-compose
+docker-compose -f docker-compose-mssql.yml up -d
+```
+
+### Option 2: Automated with Flyway Migrations (Recommended for Production)
+```bash
+# Automated database setup and migrations
+DEPLOYMENT_MODE=flyway MSSQL_SA_PASSWORD=YourPassword123 ./deploy-mssql.sh
+
+# Or manually
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mssql-flyway
+```
+
+### Option 3: Semi-Automated with Spring Boot
+```bash
+# Database setup + Spring Boot initialization
+DEPLOYMENT_MODE=spring-boot MSSQL_SA_PASSWORD=YourPassword123 ./deploy-mssql.sh
+
+# Or manually  
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mssql
+```
+
+---
+
+## 📋 MANUAL SETUP (if automation doesn't work)
+
+## Prerequisites
+
+1. Microsoft SQL Server installed (one of the following FREE options):
+   - **SQL Server Express** (Recommended) - Free version with basic features
+   - **SQL Server Developer Edition** - Full featured, free for development/test
+   - **SQL Server LocalDB** - Lightweight version for development
+
+2. SQL Server Management Studio (SSMS) - Free tool for database management
+
+## Download and Install SQL Server Express (Free)
+
+### Option 1: SQL Server Express (Recommended)
+1. Download from: https://www.microsoft.com/en-us/sql-server/sql-server-downloads
+2. Choose "Express" (free)
+3. Download and run the installer
+4. Select "Basic" installation
+5. Default instance will be available at `localhost,1433` or `localhost\SQLEXPRESS`
+
+### Option 2: SQL Server LocalDB (Simpler)
+1. Download SQL Server Express LocalDB
+2. Install with default settings
+3. Connection will be via `(localdb)\MSSQLLocalDB`
+
+## Database Setup Steps
+
+### 1. Create Database and User
+
+Connect to your SQL Server instance using SSMS or sqlcmd and run:
+
+```sql
+-- Create database
+CREATE DATABASE petclinic;
+GO
+
+-- Use the database
+USE petclinic;
+GO
+
+-- Create login and user (for SQL Authentication)
+CREATE LOGIN petclinic WITH PASSWORD = 'petclinic';
+GO
+
+-- Create user in the database
+CREATE USER petclinic FOR LOGIN petclinic;
+GO
+
+-- Grant necessary permissions
+ALTER ROLE db_owner ADD MEMBER petclinic;
+GO
+```
+
+### 2. Update Connection Details
+
+Edit `src/main/resources/application-mssql.properties` and update the connection URL:
+
+**For SQL Server Express with default instance:**
+```properties
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=petclinic;encrypt=false;trustServerCertificate=true
+spring.datasource.username=petclinic
+spring.datasource.password=petclinic
+```
+
+**For SQL Server Express with named instance:**
+```properties
+spring.datasource.url=jdbc:sqlserver://localhost:1433;instanceName=SQLEXPRESS;databaseName=petclinic;encrypt=false;trustServerCertificate=true
+```
+
+**For SQL Server LocalDB:**
+```properties
+spring.datasource.url=jdbc:sqlserver://localhost;instance=.\\SQLEXPRESS;databaseName=petclinic;integratedSecurity=true;encrypt=false;trustServerCertificate=true
+```
+
+**For Windows Authentication (no username/password needed):**
+```properties
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=petclinic;integratedSecurity=true;encrypt=false;trustServerCertificate=true
+# Remove or comment out username and password properties
+```
+
+### 3. Run the Application
+
+Run with MSSQL profile:
+
+```bash
+# Using Maven
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mssql
+
+# Or using Gradle  
+./gradlew bootRun --args='--spring.profiles.active=mssql'
+
+# Or using Java directly
+java -jar target/spring-petclinic-3.3.0-SNAPSHOT.jar --spring.profiles.active=mssql
+```
+
+## Schema and Data
+
+The application will automatically:
+1. Create all necessary tables with IDENTITY columns
+2. Insert sample data (6 vets, 10 owners, 13 pets, 4 visits)
+3. Set up foreign key relationships and indexes
+
+## Verification
+
+After startup, you can verify the data by connecting to your SQL Server database:
+
+```sql
+USE petclinic;
+GO
+
+-- Check table counts
+SELECT 'VETS' as table_name, COUNT(*) as count FROM vets
+UNION ALL
+SELECT 'OWNERS', COUNT(*) FROM owners
+UNION ALL  
+SELECT 'PETS', COUNT(*) FROM pets
+UNION ALL
+SELECT 'VISITS', COUNT(*) FROM visits;
+GO
+```
+
+Expected results:
+- VETS: 6
+- OWNERS: 10
+- PETS: 13
+- VISITS: 4
+
+## Troubleshooting
+
+### Common Issues:
+
+1. **Connection refused**: 
+   - Ensure SQL Server service is running
+   - Check if TCP/IP is enabled in SQL Server Configuration Manager
+   - Verify port 1433 is not blocked by firewall
+
+2. **Login failed**: 
+   - Verify SQL Server Authentication is enabled (mixed mode)
+   - Check username/password are correct
+   - Try Windows Authentication instead
+
+3. **Database does not exist**:
+   - Create the database manually using SSMS
+   - Or use master database and let Spring create tables there (not recommended)
+
+4. **SSL/TLS errors**:
+   - Add `encrypt=false;trustServerCertificate=true` to connection URL
+   - This is acceptable for development environments
+
+### Enable SQL Server Authentication:
+1. Open SQL Server Management Studio
+2. Right-click server → Properties → Security
+3. Select "SQL Server and Windows Authentication mode"
+4. Restart SQL Server service
+
+### Enable TCP/IP:
+1. Open SQL Server Configuration Manager
+2. SQL Server Network Configuration → Protocols
+3. Enable TCP/IP
+4. Restart SQL Server service
+
+## Switch Back to H2
+
+To switch back to H2, simply run without the mssql profile:
+
+```bash
+./mvnw spring-boot:run
+```
+
+## Free SQL Server Resources
+
+- **SQL Server Express**: Free for production use (with limitations)
+- **SQL Server Developer**: Free for development/test only
+- **SQL Server Management Studio**: Free tool for database management
+- **Azure Data Studio**: Free cross-platform database tool
+
+---
+
+## 🎯 AUTOMATION SUMMARY
+
+The database setup from your original question **CAN BE FULLY AUTOMATED** using these methods:
+
+### ✅ Fully Automated (Zero Manual Steps)
+- **Docker**: `DEPLOYMENT_MODE=docker ./deploy-mssql.sh`
+  - Creates SQL Server container
+  - Creates database and user automatically
+  - Deploys application
+  - Ready in 1 command
+
+### ✅ Production-Ready Automation  
+- **Flyway**: `DEPLOYMENT_MODE=flyway ./deploy-mssql.sh`
+  - Handles database versioning
+  - Runs migrations automatically
+  - Safe for production deployments
+  - Tracks schema changes
+
+### Files Created for Automation:
+- `docker-compose-mssql.yml` - Docker orchestration
+- `docker/mssql/init/setup-database.sh` - Database initialization script
+- `src/main/resources/db/migration/V1__*.sql` - Flyway migrations
+- `deploy-mssql.sh` - Universal deployment script
+- `application-mssql-flyway.properties` - Flyway configuration
+
+**The highlighted SQL commands from your question are now executed automatically during deployment!** 🎉

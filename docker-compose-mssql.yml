@@ -1,0 +1,53 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: petclinic-mssql
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./docker/mssql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd  -S localhost -U sa -P 'YourStrong@Passw0rd' -Q 'SELECT 1' -b -C"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 80s
+
+  app:
+    build: .
+    container_name: petclinic-app
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mssql
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://mssql:1433;databaseName=petclinic;encrypt=false;trustServerCertificate=true
+      SPRING_DATASOURCE_USERNAME: petclinic
+      SPRING_DATASOURCE_PASSWORD: petclinic
+      APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY: #######
+      APPDYNAMICS_AGENT_ACCOUNT_NAME: se-lab
+      APPDYNAMICS_CONTROLLER_HOST_NAME: se-lab.saas.appdynamics.com
+      APPDYNAMICS_JAVA_AGENT_REUSE_NODE_NAME_PREFIX: "acct-vetting-node"
+      APPDYNAMICS_AGENT_APPLICATION_NAME: acct-vetting-service
+      APPDYNAMICS_AGENT_TIER_NAME: acct-vetting
+      APPDYNAMICS_CONTROLLER_PORT: 443
+      APPDYNAMICS_CONTROLLER_SSL_ENABLED: true
+      APPDYNAMICS_AGENT_NODE_NAME: "reuse"
+      APPDYNAMICS_JAVA_AGENT_REUSE_NODE_NAME: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: acct-vetting-service
+      OTEL_RESOURCE_ATTRIBUTES: service.name=acct-vetting-service,deployment.environment=test-clinic-acct-vetting,service.version=1.0.0,service.namespace=acct-vetting
+      AGENT_DEPLOYMENT_MODE: dual
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
