@@ -13,10 +13,10 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 echo "1️⃣  Starting MSSQL database in Docker..."
-docker-compose -f docker-compose-mssql-db-only.yml up -d
+docker compose -f docker-compose-mssql-db-only.yml up -d
 
 echo "2️⃣  Waiting for database to be ready..."
-sleep 15
+sleep 35
 
 echo "3️⃣  Setting up database and user..."
 docker exec petclinic-mssql-db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -Q "
@@ -28,7 +28,7 @@ END
 
 IF NOT EXISTS (SELECT name FROM sys.server_principals WHERE name = 'petclinic')
 BEGIN
-    CREATE LOGIN [petclinic] WITH PASSWORD = 'petclinic';
+    CREATE LOGIN [petclinic] WITH PASSWORD = 'petclinicP1';
     PRINT 'Login created';
 END
 " -b -C

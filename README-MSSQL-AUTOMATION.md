@@ -71,7 +71,7 @@ This guide explains how to automatically set up MSSQL database and run your Spri
 ### Manual Process (if you prefer step-by-step)
 ```bash
 # 1. Start database
-docker-compose -f docker-compose-mssql-db-only.yml up -d
+docker compose -f docker-compose-mssql-db-only.yml up -d
 
 # 2. Wait for it to be ready (about 30 seconds)
 docker logs petclinic-mssql-db
@@ -95,7 +95,7 @@ export SPRING_DATASOURCE_PASSWORD="petclinic"
 ```sql
 -- These commands now run automatically:
 CREATE DATABASE petclinic;
-CREATE LOGIN petclinic WITH PASSWORD = 'petclinic';
+CREATE LOGIN petclinic WITH PASSWORD = 'petclinicP1';
 CREATE USER petclinic FOR LOGIN petclinic;
 ALTER ROLE db_owner ADD MEMBER petclinic;
 ```

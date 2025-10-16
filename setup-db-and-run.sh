@@ -48,7 +48,7 @@ start_database() {
         docker start $MSSQL_CONTAINER_NAME
     else
         echo "🆕 Creating new MSSQL container..."
-        docker-compose -f docker-compose-mssql-db-only.yml up -d
+        docker compose -f docker-compose-mssql-db-only.yml up -d
     fi
     
     echo "⏳ Waiting for MSSQL to be ready..."
@@ -214,7 +214,7 @@ main() {
             ;;
         "clean")
             echo "🧹 Cleaning up database container and volumes..."
-            docker-compose -f docker-compose-mssql-db-only.yml down -v
+            docker compose -f docker-compose-mssql-db-only.yml down -v
             echo "✅ Cleanup completed"
             ;;
         "status")

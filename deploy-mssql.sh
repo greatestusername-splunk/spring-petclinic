@@ -99,10 +99,10 @@ deploy_docker() {
     
     if command -v docker-compose &> /dev/null; then
         # Stop existing containers
-        docker-compose -f docker-compose-mssql.yml down
+        docker compose -f docker-compose-mssql.yml down
         
         # Start MSSQL and application
-        docker-compose -f docker-compose-mssql.yml up -d
+        docker compose -f docker-compose-mssql.yml up -d
         
         echo "✅ Docker deployment completed"
         echo "🌐 Application will be available at http://localhost:8080"

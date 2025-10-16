@@ -22,7 +22,7 @@ END
 -- Create login if it doesn't exist  
 IF NOT EXISTS (SELECT name FROM sys.server_principals WHERE name = 'petclinic')
 BEGIN
-    CREATE LOGIN petclinic WITH PASSWORD = 'petclinic';
+    CREATE LOGIN petclinic WITH PASSWORD = 'petclinicP1';
     PRINT 'Login petclinic created successfully';
 END
 ELSE
