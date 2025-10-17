@@ -80,7 +80,7 @@ docker logs petclinic-mssql-db
 export SPRING_PROFILES_ACTIVE=mssql
 export SPRING_DATASOURCE_URL="jdbc:sqlserver://localhost:1433;databaseName=petclinic;encrypt=false;trustServerCertificate=true"
 export SPRING_DATASOURCE_USERNAME="petclinic"
-export SPRING_DATASOURCE_PASSWORD="petclinic"
+export SPRING_DATASOURCE_PASSWORD="petclPPP123"
 
 # 4. Build and run with your existing script
 ./mvnw clean package -DskipTests -Dcheckstyle.skip=true
@@ -95,7 +95,7 @@ export SPRING_DATASOURCE_PASSWORD="petclinic"
 ```sql
 -- These commands now run automatically:
 CREATE DATABASE petclinic;
-CREATE LOGIN petclinic WITH PASSWORD = 'petclinicP1';
+CREATE LOGIN petclinic WITH PASSWORD = 'petclPPP123!';
 CREATE USER petclinic FOR LOGIN petclinic;
 ALTER ROLE db_owner ADD MEMBER petclinic;
 ```

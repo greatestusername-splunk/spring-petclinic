@@ -72,7 +72,7 @@ USE petclinic;
 GO
 
 -- Create login and user (for SQL Authentication)
-CREATE LOGIN petclinic WITH PASSWORD = 'petclinicP1';
+CREATE LOGIN petclinic WITH PASSWORD = 'petclPPP123!';
 GO
 
 -- Create user in the database
@@ -92,7 +92,7 @@ Edit `src/main/resources/application-mssql.properties` and update the connection
 ```properties
 spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=petclinic;encrypt=false;trustServerCertificate=true
 spring.datasource.username=petclinic
-spring.datasource.password=petclinic
+spring.datasource.password=petclPPP123!
 ```
 
 **For SQL Server Express with named instance:**

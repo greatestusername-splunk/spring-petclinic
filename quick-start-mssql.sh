@@ -28,7 +28,7 @@ END
 
 IF NOT EXISTS (SELECT name FROM sys.server_principals WHERE name = 'petclinic')
 BEGIN
-    CREATE LOGIN [petclinic] WITH PASSWORD = 'petclinicP1';
+    CREATE LOGIN [petclinic] WITH PASSWORD = 'petclPPP123!';
     PRINT 'Login created';
 END
 " -b -C
@@ -51,7 +51,7 @@ echo "5️⃣  Starting application with your monitoring configuration..."
 export SPRING_PROFILES_ACTIVE=mssql
 export SPRING_DATASOURCE_URL="jdbc:sqlserver://localhost:1433;databaseName=petclinic;encrypt=false;trustServerCertificate=true"
 export SPRING_DATASOURCE_USERNAME="petclinic"
-export SPRING_DATASOURCE_PASSWORD="petclinic"
+export SPRING_DATASOURCE_PASSWORD="petclPPP123!"
 
 echo "✅ Database ready! Starting application with start-app.sh..."
 echo "🌐 Application will be available at http://localhost:8080"

@@ -14,7 +14,7 @@ MSSQL_PORT="1433"
 MSSQL_SA_PASSWORD="YourStrong@Passw0rd"
 PETCLINIC_DB="petclinic"
 PETCLINIC_USER="petclinic"
-PETCLINIC_PASSWORD="petclinic"
+PETCLINIC_PASSWORD="petclPPP123!"
 MAX_WAIT_TIME=120  # Maximum time to wait for database (seconds)
 
 echo "📋 Configuration:"
